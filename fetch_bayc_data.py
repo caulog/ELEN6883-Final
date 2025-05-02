@@ -8,7 +8,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 GRAPHQL_URL = "https://api.studio.thegraph.com/query/110146/bayc-holdtime/version/latest"
 query = """
 {
-  transfers(first: 5, orderBy: blockTimestamp, orderDirection: asc) {
+  transfers(first: 1000, orderBy: blockTimestamp, orderDirection: asc) {
     tokenId
     from
     to
