@@ -2,7 +2,7 @@ import { Transfer as TransferEvent } from "../generated/BoredApeYachtClub/BoredA
 import { Transfer } from "../generated/schema"
 
 export function handleTransfer(event: TransferEvent): void {
-  let entity = new Transfer(event.transaction.hash)  // 👈 transaction hash is already Bytes!
+  let entity = new Transfer(event.transaction.hash)
 
   entity.from = event.params.from
   entity.to = event.params.to
