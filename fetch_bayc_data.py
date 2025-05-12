@@ -1,38 +1,60 @@
 import requests
 import pandas as pd
-import gspread
-from gspread_dataframe import set_with_dataframe
-from oauth2client.service_account import ServiceAccountCredentials
 
 # ------------------ GraphQL Setup ------------------
 GRAPHQL_URL = "https://api.studio.thegraph.com/query/110146/bayc-holdtime/version/latest"
-query = """
-{
-  transfers(first: 1000, orderBy: blockTimestamp, orderDirection: asc) {
-    tokenId
-    from
-    to
-    blockTimestamp
-    transactionHash
-  }
-}
-"""
-response = requests.post(GRAPHQL_URL, json={"query": query})
-transfers = response.json()["data"]["transfers"]
-df = pd.DataFrame(transfers)
+
+def fetch_all_transfers():
+    all_transfers = []
+    last_tx = ""
+    batch_size = 1000
+    batch_num = 0
+
+    while True:
+        filter_clause = f'transactionHash_gt: "{last_tx}"' if last_tx else ""
+        query = f"""
+        {{
+          transfers(first: {batch_size}, orderBy: transactionHash, orderDirection: asc, where: {{{filter_clause}}}) {{
+            tokenId
+            from
+            to
+            blockTimestamp
+            transactionHash
+          }}
+        }}
+        """
+        response = requests.post(GRAPHQL_URL, json={"query": query})
+
+        try:
+            json_data = response.json()
+        except Exception as e:
+            print(f"❌ Failed to parse JSON in batch {batch_num}: {e}")
+            print(response.text)
+            break
+
+        if "data" not in json_data or "transfers" not in json_data["data"]:
+            print(f"❌ Invalid response in batch {batch_num}:")
+            print(json_data)
+            break
+
+        data = json_data["data"]["transfers"]
+        if not data:
+            print("✅ All data fetched!")
+            break
+
+        all_transfers.extend(data)
+        last_tx = data[-1]["transactionHash"]
+        batch_num += 1
+        print(f"Fetched batch {batch_num}, total records: {len(all_transfers)}")
+
+    return pd.DataFrame(all_transfers)
+
+# Fetch all transfer data
+df = fetch_all_transfers()
+
+# Convert timestamps
 df["blockTimestamp"] = pd.to_datetime(pd.to_numeric(df["blockTimestamp"]), unit="s")
 
-# ------------------ Google Sheets Setup ------------------
-# Set up Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("../bayc-holdtime-data-7a41b271118d.json", scope)
-client = gspread.authorize(creds)
-
-# Open or create a Google Sheet
-sheet = client.open("bayc-holdtime-data").sheet1  # must be shared with your service account
-
-# Write DataFrame to sheet
-set_with_dataframe(sheet, df)
-
-print("Data exported to Google Sheets!")
-
+# ------------------ Save Locally ------------------
+df.to_csv("bayc_holdtime_data.csv", index=False)
+print("✅ All data saved to bayc_holdtime_data.csv")
