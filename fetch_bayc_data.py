@@ -28,18 +28,18 @@ def fetch_all_transfers():
         try:
             json_data = response.json()
         except Exception as e:
-            print(f"❌ Failed to parse JSON in batch {batch_num}: {e}")
+            print(f"Failed to parse JSON in batch {batch_num}: {e}")
             print(response.text)
             break
 
         if "data" not in json_data or "transfers" not in json_data["data"]:
-            print(f"❌ Invalid response in batch {batch_num}:")
+            print(f"Invalid response in batch {batch_num}:")
             print(json_data)
             break
 
         data = json_data["data"]["transfers"]
         if not data:
-            print("✅ All data fetched!")
+            print("All data fetched!")
             break
 
         all_transfers.extend(data)
@@ -57,4 +57,4 @@ df["blockTimestamp"] = pd.to_datetime(pd.to_numeric(df["blockTimestamp"]), unit=
 
 # ------------------ Save Locally ------------------
 df.to_csv("bayc_holdtime_data.csv", index=False)
-print("✅ All data saved to bayc_holdtime_data.csv")
+print("All data saved to bayc_holdtime_data.csv")
