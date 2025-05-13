@@ -2,7 +2,7 @@
 
 This project analyzes the holding behavior of **Bored Ape Yacht Club (BAYC)** NFTs using on-chain Ethereum data, a custom subgraph built with **The Graph Protocol**, and behavioral insights generated through **LLM (ChatGPT)** integration.
 
-It was developed as a final project for **ELEN6883: Blockchain and Decentralized Systems** at Columbia University.
+It was developed as a final project for **ELEN6883** at Columbia University.
 
 ---
 
